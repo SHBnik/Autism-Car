@@ -55,8 +55,8 @@ class Ui(QtWidgets.QMainWindow):
 
 
     def testtime_lcd_timer_tick(self):
-        self.Ttime += 1
-        self.testtime_lcd.display(str(str(self.Ttime//60)+':'+str(self.Ttime%60)))
+        self.Ttime += 0.1
+        self.testtime_lcd.display(str(str(int(self.Ttime//60))+':'+str(int(self.Ttime%60))))
         self.testtime_lcd.repaint()
 
 
@@ -72,7 +72,7 @@ class Ui(QtWidgets.QMainWindow):
             ws.send("nothing")
             result = ws.recv()
             print(result)
-            self.file.write(str(result+'\n'))
+            self.file.write(str(result + ',' + str(round(self.Ttime,1)) +'\n'))
         except Exception as e:
             print('error in tick',e)
 
@@ -88,14 +88,14 @@ class Ui(QtWidgets.QMainWindow):
         self.pd_groupBox.setEnabled(False)
         self.start_btn.setEnabled(False)
         self.exit_btn.setEnabled(True)
-        self.testtime_lcd_timer.start(1000)
+        self.testtime_lcd_timer.start(100)
         self.car_data_timer.start(100)
         
         
     
     def exit_btn_func(self):
         # This is executed when the button is pressed
-        self.file.write(str(str(self.Ttime//60)+':'+str(self.Ttime%60))) 
+        self.file.write(str(str(int(self.Ttime//60))+':'+str(int(self.Ttime%60)))) 
         self.file.close() 
         print('record done!')
         self.fullname_txtbox.clear()
