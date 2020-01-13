@@ -84,7 +84,7 @@ class Ui(QtWidgets.QMainWindow):
 
         self.file = open(os.path.join(directory, str(self.fullname_txtbox.text() + '_' + datetime.datetime.now().strftime("%I_%M_%p_%B_%d_%Y") + '.csv')), "w") 
         self.file.write(str(self.fullname_txtbox.text() + ',' + self.age_txtbox.text() + ',' + self.phone_txtbox.text() + ',' + gender + '\n'))
-        self.file.write(str('ACx,ACy,ACz,encoder1,encoder2\n')) 
+        self.file.write(str('ACx,ACy,ACz,encoder1,encoder2,time\n')) 
         self.pd_groupBox.setEnabled(False)
         self.start_btn.setEnabled(False)
         self.exit_btn.setEnabled(True)
