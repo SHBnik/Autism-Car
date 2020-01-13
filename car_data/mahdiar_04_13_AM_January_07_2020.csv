@@ -1,5 +1,5 @@
 mahdiar,4,09,male
-ACx,ACy,ACz,encoder1,encode2
+ACx,ACy,ACz,encoder1,encoder2,time
 -19,6,242,0,0,0.1
 -19,5,242,0,0,0.2
 -20,5,241,0,0,0.3
