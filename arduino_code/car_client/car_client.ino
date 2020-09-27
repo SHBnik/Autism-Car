@@ -1,42 +1,53 @@
 
-     #include <Wire.h>
+    #include <Wire.h>
     #include <ADXL345.h>
+    #include <ESP8266WiFi.h>
     #include "Wire.h" 
     #include <string.h>
-    #include <ESP8266WiFi.h>
-    #include <ESPAsyncWebServer.h>
 
     ADXL345 adxl;
     void ICACHE_RAM_ATTR Interrupt_enc1();
     void ICACHE_RAM_ATTR Interrupt_enc2();
     
-    const char* ssid     = "CAR_SHB";
-    const char* password = "1234567890";
+    const char* ssid     = "cabinet_router";
+    const char* password = "123456789";
     // Use WiFiClient class to create TCP connections
-
-    AsyncWebServer server(80);
-    AsyncWebSocket ws("/ws");
+    WiFiClient client;
+    const int httpPort = 37842;
      
+    const char* host = "192.168.43.1";
+    String endConnection = "Connection: close\r\n";
+    String contentType = "Content-Type: application/json";
     
     int AcX,AcY,AcZ;
     const int encoderIn1 = 14;
-    const int encoderIn2 = 12;
+    const int encoderIn2 = 15;
     int countEncoder1=0;
     int countEncoder2=0;
-
-    String send_data;
     
+    uint32_t timer;//unsigned int
+    String response;
 
-void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
- 
-  if(type == WS_EVT_DATA){
-//    Serial.println(send_data);
-    client->text(send_data);
-  }
-}
-    
+    String jsonEncoder(uint32_t arg0, int16_t arg1, int16_t arg2, int16_t arg3, uint32_t arg4, uint32_t arg5) {
+      return "{\"time\":\"" + String(arg0) + "\", \"AcX\":\"" + String(arg1) + "\", \"AcY\":\"" + String(arg2) +
+              "\", \"AcZ\":\"" + String(arg3) + "\", \"Encode1\":\"" + String(arg4) + "\", \"Encode2\":\"" + String(arg5) + "\"}";
+    }
 
-    
+    void wifi_init() {
+      Serial.print("Connecting to ");
+      Serial.println(ssid);
+      WiFi.begin(ssid, password);
+      
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+      }
+     
+      Serial.println("");
+      Serial.println("WiFi connected");  
+      Serial.println("IP address: ");
+      Serial.println(WiFi.localIP());
+    }
     void setup_adxl(){
       adxl.powerOn();
 
@@ -90,31 +101,58 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       setup_adxl();
       pinMode(encoderIn1, INPUT_PULLUP);
       pinMode(encoderIn2, INPUT_PULLUP);
-//
-      attachInterrupt(digitalPinToInterrupt(encoderIn1), Interrupt_enc1, RISING);
-      attachInterrupt(digitalPinToInterrupt(encoderIn2), Interrupt_enc2, RISING);
+
   
       Serial.begin(115200);
-WiFi.softAP(ssid, password);
- 
- 
-  Serial.println(WiFi.softAPIP());
- 
-  ws.onEvent(onWsEvent);
-  server.addHandler(&ws);
-
-      server.begin();
+      delay(100);
+     
+      // We start by connecting to a WiFi network
+     
+      Serial.println();
+      Serial.println();
+      
+      wifi_init();
+      
       
     }
      
 
     
     void loop() {
-        adxl.readXYZ(&AcX, &AcY, &AcZ);
-        send_data = String(AcX) + "," + String(AcY) + "," + String(AcZ) + "," + String(countEncoder1) + "," + String(countEncoder2);
-        delay(50);
+      delay(50); 
+
+      adxl.readXYZ(&AcX, &AcY, &AcZ);
+      
+      response = "";
+      timer = millis();
+
+
+
+      if (!client.connect(host, httpPort)) {
+        Serial.println("connection failed");
+        return;
       }
- 
+
+      
+      client.print(String("POST ") + "/api/toycar" + " HTTP/1.1\r\n" +
+             "Host: " + host + "\r\n" +
+             endConnection +
+             contentType + "\r\n\r\n" +
+             jsonEncoder(timer, AcX, AcY, AcZ, countEncoder1, countEncoder2)
+             + "\r\n");
+
+      String line = client.readStringUntil('\r');
+
+      if(line == "") {
+          WiFi.disconnect();
+          while (WiFi.status() == WL_CONNECTED) {
+          delay(500);
+          Serial.print(".");
+        }
+        wifi_init();
+      }
+      
+    }
 
     void Interrupt_enc1() { 
        countEncoder1++;

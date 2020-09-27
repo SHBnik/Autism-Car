@@ -10,8 +10,8 @@
     void ICACHE_RAM_ATTR Interrupt_enc1();
     void ICACHE_RAM_ATTR Interrupt_enc2();
     
-    const char* ssid     = "CAR";
-    const char* password = "1234567890";
+    const char* ssid     = "CAR_SHB";
+    const char* password = "123456789";
     // Use WiFiClient class to create TCP connections
 
     AsyncWebServer server(80);
@@ -95,15 +95,10 @@ void onWsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventT
       attachInterrupt(digitalPinToInterrupt(encoderIn2), Interrupt_enc2, RISING);
   
       Serial.begin(115200);
-WiFi.begin(ssid, password);
+WiFi.softAP(ssid, password);
  
  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
- 
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.softAPIP());
  
   ws.onEvent(onWsEvent);
   server.addHandler(&ws);
